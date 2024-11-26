@@ -1,0 +1,47 @@
+{# 가장 최근 이미지 URL 설정 #}
+{% set latest_image_url = None %}
+{% for message in messages %}
+  {% if message.role == 'user' and message.content is iterable %}
+    {% for content in message.content %}
+      {% if content.type == 'image_url' and content.image_url is mapping and content.image_url.url is string %}
+        {% set latest_image_url = content.image_url.url.strip() %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+
+{# 메시지 출력 처리 #}
+{% for message in messages %}
+  {% if message.role == 'system' %}
+    {{ message.content.strip() }}
+    {{ '\n' }}
+  
+  {% elif message.role == 'user' %}
+    USER:
+    {% if message.content is string %}
+      {{ message.content.strip() }}
+    {% elif message.content is iterable %}
+      {% for content in message.content %}
+        {% if content.type == 'text' %}
+          {{ content.text.strip() }}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {{ '\n' }}
+  
+  {% elif message.role == 'assistant' and message.content is not none %}
+    ASSISTANT: {{ message.content.strip() }}
+    {{ '\n' }}
+  {% endif %}
+{% endfor %}
+
+{# 가장 최근 이미지를 별도로 표시 #}
+{% if latest_image_url %}
+USER (Latest Image): {{ latest_image_url }}
+{{ '\n' }}
+{% endif %}
+
+{# 추가 생성 프롬프트가 필요하면 표시 #}
+{% if add_generation_prompt %}
+ASSISTANT: 
+{% endif %}
